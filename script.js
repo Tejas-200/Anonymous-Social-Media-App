@@ -221,13 +221,10 @@ async function loadFeed() {
         // Get current user
         const { data: { user } } = await supabase.auth.getUser()
         
-        // Get all posts with likes
+        // Get all posts first
         const { data: posts, error: postsError } = await supabase
             .from('posts')
-            .select(`
-                *,
-                profiles (username)
-            `)
+            .select('*')
             .order('created_at', { ascending: false })
             .limit(50)
         
@@ -240,6 +237,25 @@ async function loadFeed() {
         if (!posts || posts.length === 0) {
             feedDiv.innerHTML = '<div class="empty-feed">No posts yet. Be the first to speak!</div>'
             return
+        }
+        
+        // Get all unique user IDs from posts
+        const userIds = [...new Set(posts.map(p => p.user_id))]
+        
+        // Fetch profiles for those users
+        const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .in('id', userIds)
+        
+        if (profilesError) {
+            console.error('Profiles error:', profilesError)
+        }
+        
+        // Create a map of user_id -> username
+        const usernameMap = new Map()
+        if (profiles) {
+            profiles.forEach(p => usernameMap.set(p.id, p.username))
         }
         
         // Get user's likes if logged in
@@ -256,10 +272,12 @@ async function loadFeed() {
         }
         
         // Render posts
-        feedDiv.innerHTML = posts.map(post => `
+        feedDiv.innerHTML = posts.map(post => {
+            const username = usernameMap.get(post.user_id) || 'Anonymous'
+            return `
             <div class="post" data-post-id="${post.id}">
                 <div class="post-header">
-                    <span class="post-username">${escapeHtml(post.profiles?.username || 'Anonymous')}</span>
+                    <span class="post-username">${escapeHtml(username)}</span>
                     <span class="post-time">${formatTime(post.created_at)}</span>
                 </div>
                 <p class="post-content">${escapeHtml(post.content)}</p>
@@ -274,7 +292,7 @@ async function loadFeed() {
                     ` : ''}
                 </div>
             </div>
-        `).join('')
+        `}).join('')
         
         // Attach event listeners for like and delete buttons
         document.querySelectorAll('.like-btn').forEach(btn => {
@@ -290,7 +308,6 @@ async function loadFeed() {
         feedDiv.innerHTML = '<div class="empty-feed">Error loading feed</div>'
     }
 }
-
 // Toggle like/unlike
 async function toggleLike(postId) {
     const { data: { user } } = await supabase.auth.getUser()
