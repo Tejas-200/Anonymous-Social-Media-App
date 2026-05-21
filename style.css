@@ -1,0 +1,240 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#app {
+    width: 100%;
+    max-width: 600px;
+    margin: 20px;
+}
+
+/* Auth Container */
+.auth-container {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+    color: #1a1a1a;
+}
+
+.subtitle {
+    color: #666;
+    margin-bottom: 32px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+}
+
+input:focus {
+    outline: none;
+    border-color: #0066cc;
+    box-shadow: 0 0 0 2px rgba(0,102,204,0.1);
+}
+
+button {
+    background: #0066cc;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 8px;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #0052a3;
+}
+
+button.secondary {
+    background: #e0e0e0;
+    color: #333;
+}
+
+button.secondary:hover {
+    background: #ccc;
+}
+
+button.small {
+    padding: 6px 12px;
+    font-size: 14px;
+    width: auto;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.username-suggestion {
+    margin: 8px 0 16px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#suggestion-display {
+    color: #0066cc;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.message {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.message.error {
+    background: #fee;
+    color: #c00;
+}
+
+.message.success {
+    background: #efe;
+    color: #060;
+}
+
+/* Feed Section */
+.feed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #e8e8e8;
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+#current-username {
+    font-weight: 500;
+    color: #333;
+}
+
+.post-form {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #0066cc;
+}
+
+.post-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+#char-count {
+    font-size: 12px;
+    color: #888;
+}
+
+#char-count.warning {
+    color: #c00;
+}
+
+#post-btn {
+    width: auto;
+    margin-bottom: 0;
+    padding: 8px 24px;
+}
+
+/* Feed Posts */
+.post {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.post-username {
+    font-weight: 600;
+    color: #0066cc;
+}
+
+.post-time {
+    color: #888;
+}
+
+.post-content {
+    margin: 0;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.empty-feed {
+    text-align: center;
+    color: #888;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+    .auth-container {
+        padding: 24px;
+    }
+    
+    .feed-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

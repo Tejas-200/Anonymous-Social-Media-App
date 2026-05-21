@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Social</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="app">
+        <!-- Auth Section (Login/Signup) -->
+        <div id="auth-section">
+            <div class="auth-container">
+                <h1>Anonymous Social</h1>
+                <p class="subtitle">Speak freely. No email required.</p>
+                
+                <div id="login-form">
+                    <input type="text" id="login-username" placeholder="Username" autocomplete="username">
+                    <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+                    <button id="login-btn">Sign In</button>
+                    <button id="show-signup-btn" class="secondary">Create Account</button>
+                </div>
+                
+                <div id="signup-form" style="display: none;">
+                    <input type="text" id="signup-username" placeholder="Choose a username" autocomplete="username">
+                    <input type="password" id="signup-password" placeholder="Choose a password" autocomplete="new-password">
+                    <div class="username-suggestion">
+                        <button id="suggest-username-btn" class="small">🎲 Suggest Random Username</button>
+                        <span id="suggestion-display"></span>
+                    </div>
+                    <button id="signup-btn">Create Account</button>
+                    <button id="back-to-login-btn" class="secondary">Back to Sign In</button>
+                </div>
+                
+                <div id="auth-message" class="message"></div>
+            </div>
+        </div>
+        
+        <!-- Feed Section (Logged In) -->
+        <div id="feed-section" style="display: none;">
+            <div class="feed-header">
+                <h2>Recent Thoughts</h2>
+                <div class="user-info">
+                    <span id="current-username"></span>
+                    <button id="logout-btn" class="small">Sign Out</button>
+                </div>
+            </div>
+            
+            <div class="post-form">
+                <textarea id="post-content" placeholder="What's on your mind?" rows="3" maxlength="500"></textarea>
+                <div class="post-actions">
+                    <span id="char-count">0/500</span>
+                    <button id="post-btn">Post</button>
+                </div>
+            </div>
+            
+            <div id="feed"></div>
+        </div>
+    </div>
+    
+    <script type="module" src="script.js"></script>
+</body>
+</html>
