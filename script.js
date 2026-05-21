@@ -107,7 +107,7 @@ async function signUp() {
     }
     
     // Create user in Supabase Auth (email is username@anonymous.local)
-    const fakeEmail = `${username}@anonymous.local`
+    const fakeEmail = `${username}@anon.com`
     
     const { data, error } = await supabase.auth.signUp({
         email: fakeEmail,
@@ -158,7 +158,7 @@ async function signIn() {
         return
     }
     
-    const fakeEmail = `${username}@anonymous.local`
+    const fakeEmail = `${username}@anon.com`
     
     const { data, error } = await supabase.auth.signInWithPassword({
         email: fakeEmail,
