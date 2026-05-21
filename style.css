@@ -238,3 +238,42 @@ textarea:focus {
         align-items: flex-start;
     }
 }
+.post-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+}
+
+.like-btn, .delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 14px;
+    border-radius: 6px;
+    width: auto;
+    margin: 0;
+}
+
+.like-btn {
+    color: #666;
+}
+
+.like-btn.liked {
+    color: #e0245e;
+    background: #ffe6ec;
+}
+
+.like-btn:hover {
+    background: #f0f0f0;
+}
+
+.delete-btn {
+    color: #c00;
+}
+
+.delete-btn:hover {
+    background: #fee;
+}

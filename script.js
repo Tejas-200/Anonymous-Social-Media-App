@@ -218,10 +218,16 @@ async function createPost() {
 // Load feed
 async function loadFeed() {
     try {
-        // Get all posts
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        // Get all posts with likes
         const { data: posts, error: postsError } = await supabase
             .from('posts')
-            .select('*')
+            .select(`
+                *,
+                profiles (username)
+            `)
             .order('created_at', { ascending: false })
             .limit(50)
         
@@ -236,39 +242,120 @@ async function loadFeed() {
             return
         }
         
-        // Get all unique user IDs from posts
-        const userIds = [...new Set(posts.map(p => p.user_id))]
-        
-        // Get profiles for those users
-        const { data: profiles, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, username')
-            .in('id', userIds)
-        
-        if (profilesError) {
-            console.error('Profiles error:', profilesError)
-        }
-        
-        // Create a map of user_id -> username
-        const usernameMap = new Map()
-        if (profiles) {
-            profiles.forEach(p => usernameMap.set(p.id, p.username))
+        // Get user's likes if logged in
+        let userLikes = new Set()
+        if (user) {
+            const { data: likes } = await supabase
+                .from('post_likes')
+                .select('post_id')
+                .eq('user_id', user.id)
+            
+            if (likes) {
+                userLikes = new Set(likes.map(l => l.post_id))
+            }
         }
         
         // Render posts
         feedDiv.innerHTML = posts.map(post => `
-            <div class="post">
+            <div class="post" data-post-id="${post.id}">
                 <div class="post-header">
-                    <span class="post-username">${escapeHtml(usernameMap.get(post.user_id) || 'Anonymous')}</span>
+                    <span class="post-username">${escapeHtml(post.profiles?.username || 'Anonymous')}</span>
                     <span class="post-time">${formatTime(post.created_at)}</span>
                 </div>
                 <p class="post-content">${escapeHtml(post.content)}</p>
+                <div class="post-actions">
+                    <button class="like-btn ${userLikes.has(post.id) ? 'liked' : ''}" data-post-id="${post.id}">
+                        ❤️ ${post.likes_count || 0}
+                    </button>
+                    ${user && user.id === post.user_id ? `
+                        <button class="delete-btn" data-post-id="${post.id}">
+                            🗑️ Delete
+                        </button>
+                    ` : ''}
+                </div>
             </div>
         `).join('')
+        
+        // Attach event listeners for like and delete buttons
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.addEventListener('click', () => toggleLike(btn.dataset.postId))
+        })
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => deletePost(btn.dataset.postId))
+        })
         
     } catch (err) {
         console.error('Unexpected error:', err)
         feedDiv.innerHTML = '<div class="empty-feed">Error loading feed</div>'
+    }
+}
+
+// Toggle like/unlike
+async function toggleLike(postId) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+        alert('Please sign in to like posts')
+        return
+    }
+    
+    // Check if already liked
+    const { data: existingLike } = await supabase
+        .from('post_likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .single()
+    
+    if (existingLike) {
+        // Unlike
+        const { error } = await supabase
+            .from('post_likes')
+            .delete()
+            .eq('id', existingLike.id)
+        
+        if (error) {
+            console.error('Unlike error:', error)
+        }
+    } else {
+        // Like
+        const { error } = await supabase
+            .from('post_likes')
+            .insert({ post_id: postId, user_id: user.id })
+        
+        if (error) {
+            console.error('Like error:', error)
+        }
+    }
+    
+    // Reload feed to show updated counts
+    loadFeed()
+}
+
+// Delete post
+async function deletePost(postId) {
+    if (!confirm('Are you sure you want to delete this post?')) {
+        return
+    }
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+        alert('You must be logged in to delete posts')
+        return
+    }
+    
+    const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', postId)
+        .eq('user_id', user.id)  // Security: only delete if user owns it
+    
+    if (error) {
+        console.error('Delete error:', error)
+        alert('Failed to delete post: ' + error.message)
+    } else {
+        // Reload feed
+        loadFeed()
     }
 }
 // Update character counter
@@ -359,6 +446,24 @@ loginPassword.addEventListener('keypress', (e) => {
 signupPassword.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') signUp()
 })
+// Check if current user is admin (hardcoded for now)
+async function checkAdmin() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user && user.email === 'your_admin_email@example.com') {
+        document.getElementById('admin-panel').style.display = 'block'
+    }
+}
+
+// Admin functions
+if (document.getElementById('admin-clear-posts')) {
+    document.getElementById('admin-clear-posts').addEventListener('click', async () => {
+        if (confirm('Delete ALL posts? This cannot be undone!')) {
+            await supabase.from('posts').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+            loadFeed()
+        }
+    })
+}
+
 
 // Initialize
 checkSession()
