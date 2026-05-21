@@ -193,61 +193,84 @@ async function createPost() {
     const content = postContent.value.trim()
     if (!content) return
     
-    if (!currentUser) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
         alert('You must be logged in')
         return
     }
     
     const { error } = await supabase
         .from('posts')
-        .insert([{
-            user_id: currentUser.id,
-            content: content
+        .insert([{ 
+            user_id: user.id, 
+            content: content 
         }])
     
     if (error) {
         console.error('Post error:', error)
-        alert('Failed to post')
+        alert('Failed to post: ' + error.message)
     } else {
         postContent.value = ''
         updateCharCount()
         loadFeed()
     }
 }
-
 // Load feed
 async function loadFeed() {
-    const { data: posts, error } = await supabase
-        .from('posts')
-        .select(`
-            *,
-            profiles (username)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(50)
-    
-    if (error) {
-        console.error('Feed error:', error)
-        feedDiv.innerHTML = '<div class="empty-feed">Error loading feed</div>'
-        return
-    }
-    
-    if (!posts || posts.length === 0) {
-        feedDiv.innerHTML = '<div class="empty-feed">No posts yet. Be the first to speak!</div>'
-        return
-    }
-    
-    feedDiv.innerHTML = posts.map(post => `
-        <div class="post">
-            <div class="post-header">
-                <span class="post-username">${escapeHtml(post.profiles?.username || 'Anonymous')}</span>
-                <span class="post-time">${formatTime(post.created_at)}</span>
+    try {
+        // Get all posts
+        const { data: posts, error: postsError } = await supabase
+            .from('posts')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50)
+        
+        if (postsError) {
+            console.error('Feed error:', postsError)
+            feedDiv.innerHTML = '<div class="empty-feed">Error loading feed</div>'
+            return
+        }
+        
+        if (!posts || posts.length === 0) {
+            feedDiv.innerHTML = '<div class="empty-feed">No posts yet. Be the first to speak!</div>'
+            return
+        }
+        
+        // Get all unique user IDs from posts
+        const userIds = [...new Set(posts.map(p => p.user_id))]
+        
+        // Get profiles for those users
+        const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .in('id', userIds)
+        
+        if (profilesError) {
+            console.error('Profiles error:', profilesError)
+        }
+        
+        // Create a map of user_id -> username
+        const usernameMap = new Map()
+        if (profiles) {
+            profiles.forEach(p => usernameMap.set(p.id, p.username))
+        }
+        
+        // Render posts
+        feedDiv.innerHTML = posts.map(post => `
+            <div class="post">
+                <div class="post-header">
+                    <span class="post-username">${escapeHtml(usernameMap.get(post.user_id) || 'Anonymous')}</span>
+                    <span class="post-time">${formatTime(post.created_at)}</span>
+                </div>
+                <p class="post-content">${escapeHtml(post.content)}</p>
             </div>
-            <p class="post-content">${escapeHtml(post.content)}</p>
-        </div>
-    `).join('')
+        `).join('')
+        
+    } catch (err) {
+        console.error('Unexpected error:', err)
+        feedDiv.innerHTML = '<div class="empty-feed">Error loading feed</div>'
+    }
 }
-
 // Update character counter
 function updateCharCount() {
     const length = postContent.value.length
